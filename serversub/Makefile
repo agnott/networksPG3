@@ -8,4 +8,4 @@ server: $(FNAME).c
 	$(CMP) $(FLAGS) $(FNAME).c -o $(FNAME)
 
 clean:
-	rm -l $(FNAME)
+	rm -f $(FNAME)
