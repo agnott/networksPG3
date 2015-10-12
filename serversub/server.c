@@ -14,7 +14,8 @@
 // http://stackoverflow.com/questions/10324611/how-to-calculate-the-md5-hash-of-a-large-file-in-c
 #include<openssl/md5.h>
 #define MAX_PENDING 1	
-#define	MAX_LINE 5000
+#define	MAX_LINE 10000
+#define MAX_FILE_SIZE 1025
   
 struct recvInfo{
 	short int filename_len;
@@ -25,6 +26,7 @@ int main(int argc, char*argv[]){
   struct sockaddr_in sin;	
   struct recvInfo info;
   char buf[MAX_LINE];	
+  unsigned char fileData[MAX_FILE_SIZE];
   int len;	
   int s, new_s, portNum;
   int opt = 1;
@@ -132,11 +134,13 @@ int main(int argc, char*argv[]){
 		printf("Error opening file.\n");
 		exit(1);
 	}
-	else printf("File successfully opened.\n");
+	else{
+		printf("File successfully opened.\n");
+	}
 	
 	/*send filesize back to client. */
 	fseek(fp, 0L, SEEK_END);
-	unsigned int file_size=ftell(fp);
+	int file_size = ftell(fp);
 	printf("File size: %d\n", file_size);
 	if(send(new_s, &file_size, sizeof(file_size), 0) == -1)	{
 		perror("server send error!");
@@ -149,6 +153,7 @@ int main(int argc, char*argv[]){
 	unsigned char data[1024];
 	unsigned char c[MD5_DIGEST_LENGTH];
 
+	rewind(fp);
 	MD5_Init (&mdContext);
 	while ((bytes = fread (data, 1, 1024, fp)) != 0)
 		MD5_Update (&mdContext, data, bytes);
@@ -164,9 +169,28 @@ int main(int argc, char*argv[]){
 		exit(1);
 	}	
 	
-	/* TODO: Read file contents and send to client. */		
+	/* Send file contents to client. */	
+	rewind(fp);
+	while(!feof(fp)){ 
+		bzero(fileData, MAX_FILE_SIZE);
+		fread(fileData, MAX_FILE_SIZE, 1, fp);
+
+		//Send new portion of file data
+		if (send(new_s, fileData, strlen((char *) fileData), 0) == -1)	{
+			perror("File data not sent successfully...\n");
+			exit(1);
+		}	
+	}
 	
-		
+	bzero(fileData, MAX_FILE_SIZE);
+	strcpy((char *)fileData, "STOP\0");
+	printf("File: %s\n", fileData);
+	//Send new portion of file data
+	if (send(new_s, fileData, strlen((char *) fileData), 0) == -1)	{
+		perror("File data not sent successfully...\n");
+		exit(1);
+	}	
+
 	/* Close file */
 	printf("Closing file.\n");	
 	fclose(fp);
