@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <mhash.h>
+#include <openssl/md5.h>
 #define MAX_LINE 10000
 
 // Example command line:
@@ -103,7 +104,7 @@ int main(int argc, char * argv[])
 	bzero((char*)&sendline, sizeof(sendline));
  	bzero((char*)&recline, sizeof(recline));
 	
-	/* TODO: receive size of requested file from server. If negative value, error */
+	/* receive size of requested file from server. If negative value, error */
 		int file_size;
 		printf("created file_size variable\n");
 		if (len=(recv(s, &file_size, sizeof(file_size), 0)) == -1)	{
@@ -119,6 +120,16 @@ int main(int argc, char * argv[])
 			exit(1);
 		}
 	/* TODO: keep on receiving MD5 Hash value and stores for later use. */
+	unsigned char serverHash[MD5_DIGEST_LENGTH];
+	if (recv(s, serverHash, sizeof(serverHash), 0)==-1)	{
+		perror("error receiving hash");
+		exit(1);
+	}
+	int i;
+	for (i=0; i<MD5_DIGEST_LENGTH; i++)	{	
+		printf("%02x", serverHash[i]); 
+	}
+	printf("\n");
 
 	/* TODO: starts to receive file from server, recording/computing time information. */
 	

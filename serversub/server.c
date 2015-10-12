@@ -159,7 +159,10 @@ int main(int argc, char*argv[]){
 	printf ("\n");
 	
 	/* TODO: Send MD5 hash value of the file back to the client. */
-	
+	if (send(new_s, c, sizeof(c), 0) == -1)	{
+		perror("Hash not sent successfully...\n");
+		exit(1);
+	}	
 	
 	/* TODO: Read file contents and send to client. */		
 	
