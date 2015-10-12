@@ -66,7 +66,7 @@ int main(){
 			perror("Server Received Error!");
 			exit(1);
 		}
-		info.filename_len = (short) atoi(buf);
+		info.filename_len = atoi(buf);
 		printf("Size: %s \n", buf);
 		memset(buf,0,strlen(buf));
 		

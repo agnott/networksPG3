@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
 	//check for correct number of arguments
 	if (argc==4) {	//name and three command line arguments
 		host = argv[1];
-		port_number = atoi(argv[2]);
+		port_number=atoi(argv[2]);
 
 		strcpy(filename, argv[3]);
 	}
