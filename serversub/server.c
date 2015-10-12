@@ -134,11 +134,11 @@ int main(int argc, char*argv[]){
 	}
 	else printf("File successfully opened.\n");
 	
-	/* TODO: send filesize back to client. */
+	/*send filesize back to client. */
 	fseek(fp, 0L, SEEK_END);
 	unsigned int file_size=ftell(fp);
 	printf("File size: %d\n", file_size);
-	if(send(new_s, &file_size, sizeof(unsigned int), 0) == -1)	{
+	if(send(new_s, &file_size, sizeof(file_size), 0) == -1)	{
 		perror("server send error!");
 		exit(1);
 	}

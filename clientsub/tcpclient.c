@@ -104,7 +104,20 @@ int main(int argc, char * argv[])
  	bzero((char*)&recline, sizeof(recline));
 	
 	/* TODO: receive size of requested file from server. If negative value, error */
-	
+		int file_size;
+		printf("created file_size variable\n");
+		if (len=(recv(s, &file_size, sizeof(file_size), 0)) == -1)	{
+			perror("client recieved error");
+			exit(1);
+		}
+		
+		file_size=ntohs(file_size);	
+		printf("File size: %d\n", file_size);
+
+		if (file_size == 0)	{
+			perror("File does not exist on the server\n");
+			exit(1);
+		}
 	/* TODO: keep on receiving MD5 Hash value and stores for later use. */
 
 	/* TODO: starts to receive file from server, recording/computing time information. */
