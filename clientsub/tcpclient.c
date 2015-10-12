@@ -1,3 +1,7 @@
+// Brittany Harrington (bharrin4)
+// Andrew Gnott (agnott)
+// Nick Swift (nswift)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +13,10 @@
 #include <unistd.h>
 #include <mhash.h>
 #define MAX_LINE 10000
+
+// Example command line:
+// make
+// ./tcpclient student01.cse.nd.edu 41001 "testfile.txt"
 
 int main(int argc, char * argv[])
 {
@@ -71,9 +79,12 @@ int main(int argc, char * argv[])
 		perror("client send error!"); 
 		exit(1);
 	}
+	else printf("Sent length of filename: %s \n", sendline);
+
 	//Clear sendline var
 	//bzero((char*)&sendline, sizeof(sendline));
 	memset(sendline,0,strlen(sendline));
+	printf("Cleared sendline: %s\n", sendline);
 
 	//Send the sendline
 	sprintf(sendline, "%s", filename);
@@ -81,38 +92,32 @@ int main(int argc, char * argv[])
 		perror("client send error!"); 
 		exit(1);
 	}
+	else printf("Sent filename: %s \n", sendline);
+
 	//Clear sendline var
 	//bzero((char*)&sendline, sizeof(sendline));	
 	memset(sendline,0,strlen(sendline));
+	printf("Cleared sendline: %s\n", sendline);
 
-	/*send file to server*/
-	/*fp=fopen(filename, "rt");
-	fseek(fp, 0, SEEK_END);
-	len=ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	if (sendline)   {
-		fread(sendline, 1, len, fp);
-	}
-
-	printf("%s\n", sendline);
-
-	if(send(s, sendline, len, 0)==-1){
-		perror("client send error!"); 
-		exit(1);
-	}
-	gettimeofday(&start, NULL);
-
-	//recieve back message from server into recline
-	
-	//get time of day immediately after receiving message
-	gettimeofday(&end, NULL);
-	//print out RTT time
-	printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
-	*/
 	//clear the two buffers so they can continue to receive messages
 	bzero((char*)&sendline, sizeof(sendline));
-  bzero((char*)&recline, sizeof(recline));
+ 	bzero((char*)&recline, sizeof(recline));
 	
+	/* TODO: receive size of requested file from server. If negative value, error */
+	
+	/* TODO: keep on receiving MD5 Hash value and stores for later use. */
+
+	/* TODO: starts to receive file from server, recording/computing time information. */
+	
+	/* TODO: after file is received, close connection. */
 	close(s);
+	
+	/* TODO: computes MD5 Hash value based on content received, compare to original MD5 */
+	
+	/* TODO: if MD5 values don't match, signal error and exit */
+	
+	/* TODO: if MD5 values match, print matches and additional info (see handout) */
+
+	/* TODO: client exits. */
 }
 
