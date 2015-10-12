@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <mhash.h>
 #include <openssl/md5.h>
-#define MAX_LINE 10000
+#define MAX_LINE 1024
 
 // Example command line:
 // make
@@ -21,7 +21,6 @@
 
 int main(int argc, char * argv[])
 {
-//	FILE *fp;
 	struct hostent *hp;
 	struct sockaddr_in sin;
 	char *host;
@@ -60,7 +59,7 @@ int main(int argc, char * argv[])
 	/* active open */
 	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("error: socket failure\n");
-	//	printf("Welcome to TCP client!\n"); 
+		//	printf("Welcome to TCP client!\n"); 
 		exit(1);
 	}
 
@@ -71,7 +70,7 @@ int main(int argc, char * argv[])
 	}
 
 	/* get length of file name and add it to filename string-- send 
- 	 * the combination to server*/
+	 * the combination to server*/
 	short int filename_len = strlen(filename);
 
 	//Send length of file name			
@@ -102,24 +101,24 @@ int main(int argc, char * argv[])
 
 	//clear the two buffers so they can continue to receive messages
 	bzero((char*)&sendline, sizeof(sendline));
- 	bzero((char*)&recline, sizeof(recline));
-	
-	/* receive size of requested file from server. If negative value, error */
-		int file_size;
-		printf("created file_size variable\n");
-		if (len=(recv(s, &file_size, sizeof(file_size), 0)) == -1)	{
-			perror("client recieved error");
-			exit(1);
-		}
-		
-		file_size=ntohs(file_size);	
-		printf("File size: %d\n", file_size);
+	bzero((char*)&recline, sizeof(recline));
 
-		if (file_size == 0)	{
-			perror("File does not exist on the server\n");
-			exit(1);
-		}
-	/* TODO: keep on receiving MD5 Hash value and stores for later use. */
+	/* receive size of requested file from server. If negative value, error */
+	int file_size;
+	printf("created file_size variable\n");
+	if ((len=(recv(s, &file_size, sizeof(file_size), 0))) == -1)	{
+		perror("client recieved error");
+		exit(1);
+	}
+
+	//file_size=ntohs(file_size);	
+	printf("File size: %d\n", file_size);
+
+	if (file_size == 0)	{
+		perror("File does not exist on the server\n");
+		exit(1);
+	}
+	/* keep on receiving MD5 Hash value and stores for later use. */
 	unsigned char serverHash[MD5_DIGEST_LENGTH];
 	if (recv(s, serverHash, sizeof(serverHash), 0)==-1)	{
 		perror("error receiving hash");
@@ -131,17 +130,61 @@ int main(int argc, char * argv[])
 	}
 	printf("\n");
 
-	/* TODO: starts to receive file from server, recording/computing time information. */
-	
+	//initialize client hash
+	MD5_CTX mdContext;
+	//        int bytes;
+	//        unsigned char data[1024];
+	unsigned char c[MD5_DIGEST_LENGTH];
+
+	MD5_Init (&mdContext);
+
+	int j;
+	//find time when filename was first sent to calculate throughput later
+	gettimeofday(&start, NULL);
+
+	while (len != 0)	{
+		/* TODO: starts to receive file from server, recording/computing time information. */
+		bzero((char*)&recline, sizeof(recline));
+		if ((len = (recv(s, recline, MAX_LINE, 0))) == -1)	{
+			perror("error receiving file from server\n");
+		}
+
+		//grab time that file was received
+
+
+			//	printf("%s\n", recline);
+		MD5_Update (&mdContext, recline, strlen(recline));
+
+
+		/* TODO: computes MD5 Hash value based on content received, compare to original MD5 */
+
+		//       while ((bytes = fread(data, 1, 1024, recline)) != 0)
+	}
+
+	gettimeofday(&end, NULL);
+	//finish creating hash
+	MD5_Final (c,&mdContext);
+	printf("MD5: ");
+	for(j = 0; j < MD5_DIGEST_LENGTH; j++) printf("%02x", c[j]);
+	printf ("\n");
+
+
 	/* TODO: after file is received, close connection. */
 	close(s);
-	
-	/* TODO: computes MD5 Hash value based on content received, compare to original MD5 */
-	
+
 	/* TODO: if MD5 values don't match, signal error and exit */
-	
+	int l;
+	for (l=0; l<sizeof(c); l++)	{
+		if (c[l]!=serverHash[l])	{
+			printf("error: hashes do not match\n");
+			exit(1);
+		}
+	}
+
 	/* TODO: if MD5 values match, print matches and additional info (see handout) */
 
+		//print out RTT time
+		printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
 	/* TODO: client exits. */
+	return 0;
 }
-
