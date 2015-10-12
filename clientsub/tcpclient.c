@@ -20,7 +20,7 @@
 
 int main(int argc, char * argv[])
 {
-	FILE *fp;
+//	FILE *fp;
 	struct hostent *hp;
 	struct sockaddr_in sin;
 	char *host;
