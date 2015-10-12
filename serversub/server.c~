@@ -10,11 +10,17 @@
 #include<netinet/in.h>	
 #include<netdb.h>	
 #define	SERVER_PORT	41001	
-#define MAX_PENDING	5	
-#define	MAX_LINE 256	
+#define MAX_PENDING	1	
+#define	MAX_LINE 5000
+  
+struct recvInfo{
+	short int filename_len;
+	char filename[MAX_LINE];
+};
   
 int main(){	
   struct sockaddr_in sin;	
+  struct recvInfo info;
   char buf[MAX_LINE];	
   int len;	
   int s, new_s;
@@ -55,18 +61,32 @@ int main(){
   		exit(1);
   	}	
   	
-  	while(1){
-  		if((len = recv(new_s, buf, sizeof(buf),0)) == -1){
-  			perror("Server Received Error!");
-  			exit(1);
-  		}
-  		if(len == 0){
-  			break;
-  		}
-  		printf("TCP Server Received: %s", buf);
-  		printf("Client finishes, close the connection!\n");
-  		close(new_s);
-  	}
+  	//Receiving size of file name
+		if((len = recv(new_s, buf, sizeof(buf),0)) == -1){
+			perror("Server Received Error!");
+			exit(1);
+		}
+		info.filename_len = atoi(buf);
+		printf("Size: %s \n", buf);
+		memset(buf,0,strlen(buf));
+		
+		//Receiving file name
+		if((len = recv(new_s, buf, sizeof(buf),0)) == -1){
+			perror("Server Received Error!");
+			exit(1);
+		}
+		printf("length: %d\n", info.filename_len);
+		if(info.filename_len != strlen(buf)){
+			printf("Error receiving filename");
+			exit(1);
+		}
+		strcpy(info.filename, buf);
+		printf("Filename: %s \n", buf);
+		memset(buf,0,strlen(buf));
+		
+		
+  		//printf("Client finishes, close the connection!\n");
+  		//close(new_s);
   }
   return;
 };

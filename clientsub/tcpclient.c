@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
 	//check for correct number of arguments
 	if (argc==4) {	//name and three command line arguments
 		host = argv[1];
-		port_number=atoi(argv[2]);
+		port_number = atoi(argv[2]);
 
 		strcpy(filename, argv[3]);
 	}
@@ -62,18 +62,31 @@ int main(int argc, char * argv[])
 	}
 
 	/* get length of file name and add it to filename string-- send 
- * 	the combination to server*/
-	short int filename_len=htons(strlen(filename));
-	//printf("filename_len: %d\n", filename_len);
-	sprintf(sendline, "%d %s", filename_len, filename);
-	if(send(s, sendline, sizeof(sendline), 0)==-1){
+ 	 * the combination to server*/
+	short int filename_len = strlen(filename);
+
+	//Send length of file name			
+	sprintf(sendline, "%d", filename_len);
+	if(send(s, sendline, strlen(sendline), 0)==-1){
 		perror("client send error!"); 
 		exit(1);
 	}
-	bzero((char*)&sendline, sizeof(sendline));
+	//Clear sendline var
+	//bzero((char*)&sendline, sizeof(sendline));
+	memset(sendline,0,strlen(sendline));
+
+	//Send the sendline
+	sprintf(sendline, "%s", filename);
+	if(send(s, sendline, strlen(sendline), 0)==-1){
+		perror("client send error!"); 
+		exit(1);
+	}
+	//Clear sendline var
+	//bzero((char*)&sendline, sizeof(sendline));	
+	memset(sendline,0,strlen(sendline));
 
 	/*send file to server*/
-	fp=fopen(filename, "rt");
+	/*fp=fopen(filename, "rt");
 	fseek(fp, 0, SEEK_END);
 	len=ftell(fp);
 	fseek(fp, 0, SEEK_SET);
@@ -95,11 +108,11 @@ int main(int argc, char * argv[])
 	gettimeofday(&end, NULL);
 	//print out RTT time
 	printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
-	
+	*/
 	//clear the two buffers so they can continue to receive messages
 	bzero((char*)&sendline, sizeof(sendline));
-        bzero((char*)&recline, sizeof(recline));
-
+  bzero((char*)&recline, sizeof(recline));
+	
 	close(s);
 }
 

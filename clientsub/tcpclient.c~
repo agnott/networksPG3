@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <mhash.h>
 #define MAX_LINE 10000
 
 int main(int argc, char * argv[])
@@ -49,7 +50,8 @@ int main(int argc, char * argv[])
 
 	/* active open */
 	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-		perror("error: socket failure\n"); 
+		perror("error: socket failure\n");
+	//	printf("Welcome to TCP client!\n"); 
 		exit(1);
 	}
 
@@ -59,13 +61,36 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	int filename_len=sizeof(filename);
-	fp=fopen(filename, "rt");
+	/* get length of file name and add it to filename string-- send 
+ 	 * the combination to server*/
+	short int filename_len = strlen(filename);
+
+	//Send length of file name			
+	sprintf(sendline, "%d", filename_len);
+	if(send(s, sendline, strlen(sendline), 0)==-1){
+		perror("client send error!"); 
+		exit(1);
+	}
+	//Clear sendline var
+	//bzero((char*)&sendline, sizeof(sendline));
+	memset(sendline,0,strlen(sendline));
+
+	//Send the sendline
+	sprintf(sendline, "%s", filename);
+	if(send(s, sendline, strlen(sendline), 0)==-1){
+		perror("client send error!"); 
+		exit(1);
+	}
+	//Clear sendline var
+	//bzero((char*)&sendline, sizeof(sendline));	
+	memset(sendline,0,strlen(sendline));
+
+	/*send file to server*/
+	/*fp=fopen(filename, "rt");
 	fseek(fp, 0, SEEK_END);
 	len=ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 	if (sendline)   {
-		sprintf(sendline, "%d", filename_len);
 		fread(sendline, 1, len, fp);
 	}
 
@@ -83,11 +108,11 @@ int main(int argc, char * argv[])
 	gettimeofday(&end, NULL);
 	//print out RTT time
 	printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
-	
+	*/
 	//clear the two buffers so they can continue to receive messages
 	bzero((char*)&sendline, sizeof(sendline));
-        bzero((char*)&recvline, sizeof(recvline));
-
+  bzero((char*)&recline, sizeof(recline));
+	
 	close(s);
 }
 
