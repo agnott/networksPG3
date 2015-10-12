@@ -13,7 +13,6 @@
 #include<netdb.h>	
 // http://stackoverflow.com/questions/10324611/how-to-calculate-the-md5-hash-of-a-large-file-in-c
 #include<openssl/md5.h>
-#define	SERVER_PORT 41001	
 #define MAX_PENDING 1	
 #define	MAX_LINE 5000
   
@@ -22,21 +21,29 @@ struct recvInfo{
 	char filename[MAX_LINE];
 };
   
-int main(){	
+int main(int argc, char*argv[]){	
   struct sockaddr_in sin;	
   struct recvInfo info;
   char buf[MAX_LINE];	
   int len;	
-  int s, new_s;
+  int s, new_s, portNum;
   int opt = 1;
+
+	//check for correct number of arguments
+	if (argc!=2)	{
+		fprintf(stderr, "error: incorrect number of arguments\n");
+	}	else	{
+		//set first argument to port number
+		portNum=atoi(argv[1]);
+	}
   
   /*build  address  data  structure*/
   bzero((char *)&sin, sizeof(sin));	
   sin.sin_family = AF_INET;
   sin.sin_addr.s_addr =	INADDR_ANY;
   
-  /* TODO: Server port from command line. */
-  sin.sin_port = htons(SERVER_PORT);	
+  /* Set Server port from command line. */
+  sin.sin_port = htons(portNum);	
   
   /*setup passive open*/	
   if((s	= socket(PF_INET, SOCK_STREAM, 0)) < 0){	
@@ -76,7 +83,7 @@ int main(){
 	}
 	else printf("New message: %s\n", buf);
 		
-	info.filename_len = (short) atoi(buf);
+	info.filename_len = htons((short) atoi(buf));
 	printf("Size: %s \n", buf);
 	memset(buf,0,strlen(buf));
 		
@@ -88,10 +95,10 @@ int main(){
 	else printf("New message: %s\n", buf);
 
 	printf("length: %d\n", info.filename_len);
-	if(info.filename_len != strlen(buf)){
+/*	if(info.filename_len != strlen(buf)){
 		printf("Error receiving filename");
 		exit(1);
-	}
+	}*/
 	strcpy(info.filename, buf);
 	printf("Filename: %s \n", buf);
 	memset(buf,0,strlen(buf));
@@ -100,9 +107,15 @@ int main(){
 	FILE *fp;
 	struct stat st;
 	//int filesize;
+	
+	//set up file path to afs directory
+	char path[200];
+	bzero(path, 200);
+	strcat(path, "/afs/nd.edu/coursefa.15/cse/cse30264.01/files/program3/");
+	strcat(path, info.filename);
 		
 	/* Check if file exists */		
-	if(stat(info.filename, &st) != 0){
+	if(stat(path, &st) != 0){
 		printf("File does not exist.\n");
 		//filesize=-1;
 		//exit(1);
@@ -112,16 +125,24 @@ int main(){
 		//filesize = st.st_size;
 	}
 	
-	/* TODO: send filesize back to client. */
 		
 	/* Open File */
-	fp=fopen(info.filename, "rt");
+	fp=fopen(path, "rt");
 	if(fp==NULL){
 		printf("Error opening file.\n");
 		exit(1);
 	}
 	else printf("File successfully opened.\n");
 	
+	/* TODO: send filesize back to client. */
+	fseek(fp, 0L, SEEK_END);
+	unsigned int file_size=ftell(fp);
+	printf("File size: %d\n", file_size);
+	if(send(new_s, &file_size, sizeof(unsigned int), 0) == -1)	{
+		perror("server send error!");
+		exit(1);
+	}
+
 	/* Determines MD5 hash value of the file. */
 	MD5_CTX mdContext;
 	int bytes;
