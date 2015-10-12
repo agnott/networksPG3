@@ -1,5 +1,5 @@
 CMP = gcc
-FLAGS = 
+FLAGS = -lssl -lcrypto -g -Wall 
 FNAME = tcpclient
 
 all: client
