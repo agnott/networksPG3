@@ -35,7 +35,6 @@ int main(int argc, char * argv[])
 	if (argc==4) {	//name and three command line arguments
 		host = argv[1];
 		port_number = atoi(argv[2]);
-
 		strcpy(filename, argv[3]);
 	}
 	else {
@@ -59,7 +58,6 @@ int main(int argc, char * argv[])
 	/* active open */
 	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("error: socket failure\n");
-		//	printf("Welcome to TCP client!\n"); 
 		exit(1);
 	}
 
@@ -79,25 +77,23 @@ int main(int argc, char * argv[])
 		perror("client send error!"); 
 		exit(1);
 	}
-	else printf("Sent length of filename: %s \n", sendline);
+//	else printf("Sent length of filename: %s \n", sendline);
 
 	//Clear sendline var
-	//bzero((char*)&sendline, sizeof(sendline));
 	memset(sendline,0,strlen(sendline));
-	printf("Cleared sendline: %s\n", sendline);
+//	printf("Cleared sendline: %s\n", sendline);
 
-	//Send the sendline
+	//Send the filename
 	sprintf(sendline, "%s", filename);
 	if(send(s, sendline, strlen(sendline), 0)==-1){
 		perror("client send error!"); 
 		exit(1);
 	}
-	else printf("Sent filename: %s \n", sendline);
+//	else printf("Sent filename: %s \n", sendline);
 
 	//Clear sendline var
-	//bzero((char*)&sendline, sizeof(sendline));	
 	memset(sendline,0,strlen(sendline));
-	printf("Cleared sendline: %s\n", sendline);
+//	printf("Cleared sendline: %s\n", sendline);
 
 	//clear the two buffers so they can continue to receive messages
 	bzero((char*)&sendline, sizeof(sendline));
@@ -105,62 +101,89 @@ int main(int argc, char * argv[])
 
 	/* receive size of requested file from server. If negative value, error */
 	int file_size;
-	printf("created file_size variable\n");
+//	printf("created file_size variable\n");
 	if ((len=(recv(s, &file_size, sizeof(file_size), 0))) == -1)	{
 		perror("client recieved error");
 		exit(1);
 	}
+//	printf("File size: %d\n", file_size);
 
-	//file_size=ntohs(file_size);	
-	printf("File size: %d\n", file_size);
-
-	if (file_size == 0)	{
+	//if file does not exist on server--display error message and exit
+	if (file_size == -1)	{
 		perror("File does not exist on the server\n");
 		exit(1);
 	}
-	/* keep on receiving MD5 Hash value and stores for later use. */
+
+	/* receive MD5 Hash value from server and store for later use. */
 	unsigned char serverHash[MD5_DIGEST_LENGTH];
 	if (recv(s, serverHash, sizeof(serverHash), 0)==-1)	{
 		perror("error receiving hash");
 		exit(1);
 	}
-	int i;
-	for (i=0; i<MD5_DIGEST_LENGTH; i++)	{	
-		printf("%02x", serverHash[i]); 
-	}
-	printf("\n");
 
-	//initialize client hash
-	MD5_CTX mdContext;
-	unsigned char c[MD5_DIGEST_LENGTH];
-	MD5_Init (&mdContext);
+
+
+	//create file to store contents of file being receivd
+	FILE *file;
+	file=fopen(argv[3], "w+");	//create file with write permissions
+	if (file == NULL)	{
+		printf("Could not open file\n");
+		exit(1);
+	}
+	int downloaded=0;	//keep track of total characters downloaded
+	int buffer_len=0;	//keep track of buffer length so last packet is correct size
 
 	//find time when filename was first sent to calculate throughput later
 	gettimeofday(&start, NULL);
-	while (len!=0)	{
-		/* TODO: starts to receive file from server, recording/computing time information. */
-		bzero((char*)&recline, sizeof(recline));
-		if ((len = (recv(s, recline, MAX_LINE, 0))) == -1)	{
-			perror("error receiving file from server\n");
+	while (downloaded < file_size)	{
+		//while client has not received the entire file size...
+		//if there is enough for one full packet, send full packet's worth of data
+		//if there is not enough left in file (final packet) only send a packetin the size of the remaining data
+		if ((file_size - downloaded) >= MAX_LINE)	{
+			buffer_len=MAX_LINE;
+		}	else	{
+			buffer_len=(file_size-downloaded);
 		}
 
-		MD5_Update (&mdContext, recline, strlen(recline));
-		/* TODO: computes MD5 Hash value based on content received, compare to original MD5 */
-	}
+		//receive packet from server and read into recline buffer
+		if ((recv(s, recline, buffer_len, 0)) == -1)	{
+			perror("error receiving file from server\n");
+			exit(1);
+		}
+		//write contents of buffer directly into file and clear buffer
+		fwrite(recline, sizeof(char), buffer_len, file);
+		bzero(recline, buffer_len);
+		downloaded+=buffer_len;	//increment size of downloaded file 
 
+	}
+	//get time once entire file has been received
 	gettimeofday(&end, NULL);
-	//finish creating hash
+	rewind(file);	//rewind file pointer to compute hash
+
+
+	/*computes MD5 Hash value based on content received, compare to original MD5 -- use same steps as computing initial hash in server */
+	MD5_CTX mdContext;
+	int bytes;
+	unsigned char data[1024];
+	unsigned char c[MD5_DIGEST_LENGTH];
+
+	MD5_Init (&mdContext);
+	while ((bytes = fread (data, 1, 1024, file)) != 0)
+		MD5_Update (&mdContext, data, bytes);
 	MD5_Final (c,&mdContext);
-	printf("client MD5: ");
+/*
+	printf("MD5: ");
 	int j;
 	for(j = 0; j < MD5_DIGEST_LENGTH; j++) printf("%02x", c[j]);
 	printf ("\n");
+*/
 
 
-	/* TODO: after file is received, close connection. */
+
+	/* after file is received, close connection. */
 	close(s);
 
-	/* TODO: if MD5 values don't match, signal error and exit */
+	/*if MD5 values don't match, signal error and exit */
 	int l;
 	for (l=0; l<sizeof(c); l++)	{
 		if (c[l]!=serverHash[l])	{
@@ -171,6 +194,5 @@ int main(int argc, char * argv[])
 
 	//print out RTT time
 	printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
-	/* TODO: client exits. */
 	return 0;
 }
