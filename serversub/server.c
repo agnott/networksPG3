@@ -183,41 +183,18 @@ int main(int argc, char*argv[]){
 	}
 	
 	bzero(fileData, MAX_FILE_SIZE);
-	strcpy((char *)fileData, "STOP\0");
+/*	strcpy((char *)fileData, "STOP\0");
 	printf("File: %s\n", fileData);
 	//Send new portion of file data
 	if (send(new_s, fileData, strlen((char *) fileData), 0) == -1)	{
 		perror("File data not sent successfully...\n");
 		exit(1);
 	}	
-
+*/
 	/* Close file */
 	printf("Closing file.\n");	
 	fclose(fp);
 	
-	/* Code that might be useful for file i/o slash messaging */
-	//fseek(fp, 0, SEEK_END);
-	//len=ftell(fp);
-	//fseek(fp, 0, SEEK_SET);
-	//if (sendline)   {
-	//	fread(sendline, 1, len, fp);
-	//}
-
-	//printf("%s\n", sendline);
-
-	//if(send(s, sendline, len, 0)==-1){
-	//	perror("client send error!"); 
-	//	exit(1);
-	//}
-	//gettimeofday(&start, NULL);
-
-	//recieve back message from server into recline
-
-	//get time of day immediately after receiving message
-	//gettimeofday(&end, NULL);
-	//print out RTT time
-	//printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
-		
 	/* Cleanup */
 	printf("Server finishes, close the connection!\n");
 	close(new_s);

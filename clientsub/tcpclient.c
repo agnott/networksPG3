@@ -132,13 +132,9 @@ int main(int argc, char * argv[])
 
 	//initialize client hash
 	MD5_CTX mdContext;
-	//        int bytes;
-	//        unsigned char data[1024];
 	unsigned char c[MD5_DIGEST_LENGTH];
-
 	MD5_Init (&mdContext);
 
-	int j;
 	//find time when filename was first sent to calculate throughput later
 	gettimeofday(&start, NULL);
 	while (len!=0)	{
@@ -147,22 +143,16 @@ int main(int argc, char * argv[])
 		if ((len = (recv(s, recline, MAX_LINE, 0))) == -1)	{
 			perror("error receiving file from server\n");
 		}
-		//grab time that file was received
 
-
-			//	printf("%s\n", recline);
 		MD5_Update (&mdContext, recline, strlen(recline));
-
-
 		/* TODO: computes MD5 Hash value based on content received, compare to original MD5 */
-
-		//       while ((bytes = fread(data, 1, 1024, recline)) != 0)
 	}
 
 	gettimeofday(&end, NULL);
 	//finish creating hash
 	MD5_Final (c,&mdContext);
-	printf("MD5: ");
+	printf("client MD5: ");
+	int j;
 	for(j = 0; j < MD5_DIGEST_LENGTH; j++) printf("%02x", c[j]);
 	printf ("\n");
 
@@ -179,10 +169,8 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	/* TODO: if MD5 values match, print matches and additional info (see handout) */
-
-		//print out RTT time
-		printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
+	//print out RTT time
+	printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
 	/* TODO: client exits. */
 	return 0;
 }
