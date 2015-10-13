@@ -141,7 +141,6 @@ int main(int argc, char * argv[])
 	int j;
 	//find time when filename was first sent to calculate throughput later
 	gettimeofday(&start, NULL);
-
 	while (len!=0)	{
 		/* TODO: starts to receive file from server, recording/computing time information. */
 		bzero((char*)&recline, sizeof(recline));
