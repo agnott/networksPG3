@@ -15,7 +15,7 @@
 #include<openssl/md5.h>
 #define MAX_PENDING 1	
 #define	MAX_LINE 10000
-#define MAX_FILE_SIZE 1025
+#define MAX_FILE_SIZE 1024
 
 struct recvInfo{
 	short int filename_len;
@@ -125,7 +125,8 @@ int main(int argc, char*argv[]){
 				perror("Error sending server's error message\n");
 				exit(1);
 			}
-			exit(1);
+			//exit(1);
+			continue;
 		}
 
 
@@ -135,9 +136,7 @@ int main(int argc, char*argv[]){
 			printf("Error opening file.\n");
 			exit(1);
 		}
-//		else{
-//			printf("File successfully opened.\n");
-//		}
+//		else printf("File successfully opened.\n");
 
 		/*send filesize back to client. */
 		fseek(fp, 0L, SEEK_END);
@@ -164,7 +163,7 @@ int main(int argc, char*argv[]){
 		for(i = 0; i < MD5_DIGEST_LENGTH; i++) printf("%02x", c[i]);
 		printf ("\n");
 */
-		/* TODO: Send MD5 hash value of the file back to the client. */
+		/* Send MD5 hash value of the file back to the client. */
 		if (send(new_s, c, sizeof(c), 0) == -1)	{
 			perror("Hash not sent successfully...\n");
 			exit(1);
