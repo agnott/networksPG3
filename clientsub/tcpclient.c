@@ -1,6 +1,7 @@
 // Brittany Harrington (bharrin4)
 // Andrew Gnott (agnott)
 // Nick Swift (nswift)
+// TCP Client requests file transfer from server, downloads file and calculates performance metrics of transfer.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,10 +18,11 @@
 
 // Example command line:
 // make
-// ./tcpclient student01.cse.nd.edu 41001 "testfile.txt"
+// ./tcpclient student01.cse.nd.edu 41001 SmallFile.txt
 
 int main(int argc, char * argv[])
 {
+	// Allocate appropriate memory
 	struct hostent *hp;
 	struct sockaddr_in sin;
 	char *host;
@@ -77,11 +79,9 @@ int main(int argc, char * argv[])
 		perror("client send error!"); 
 		exit(1);
 	}
-//	else printf("Sent length of filename: %s \n", sendline);
 
 	//Clear sendline var
 	memset(sendline,0,strlen(sendline));
-//	printf("Cleared sendline: %s\n", sendline);
 
 	//Send the filename
 	sprintf(sendline, "%s", filename);
@@ -89,11 +89,9 @@ int main(int argc, char * argv[])
 		perror("client send error!"); 
 		exit(1);
 	}
-//	else printf("Sent filename: %s \n", sendline);
 
 	//Clear sendline var
 	memset(sendline,0,strlen(sendline));
-//	printf("Cleared sendline: %s\n", sendline);
 
 	//clear the two buffers so they can continue to receive messages
 	bzero((char*)&sendline, sizeof(sendline));
@@ -101,12 +99,10 @@ int main(int argc, char * argv[])
 
 	/* receive size of requested file from server. If negative value, error */
 	int file_size;
-//	printf("created file_size variable\n");
 	if ((len=(recv(s, &file_size, sizeof(file_size), 0))) == -1)	{
 		perror("client recieved error");
 		exit(1);
 	}
-//	printf("File size: %d\n", file_size);
 
 	//if file does not exist on server--display error message and exit
 	if (file_size == -1)	{
@@ -169,13 +165,6 @@ int main(int argc, char * argv[])
 	while ((bytes = fread (data, 1, 1024, file)) != 0)
 		MD5_Update (&mdContext, data, bytes);
 	MD5_Final (c,&mdContext);
-/*
-	printf("MD5: ");
-	int j;
-	for(j = 0; j < MD5_DIGEST_LENGTH; j++) printf("%02x", c[j]);
-	printf ("\n");
-*/
-
 
 
 	/* after file is received, close connection. */
@@ -193,7 +182,6 @@ int main(int argc, char * argv[])
 	//Say that hash matches, print out information
 	printf("Hash Matches\n");
 	printf("%i bytes transferred in %5.2f seconds\n", file_size, ((end.tv_sec + end.tv_usec/1000000.)- (start.tv_sec + start.tv_usec/1000000.)));
-	//printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
 	printf("Throughput: %5.3f Megabytes/sec\n", (file_size/1000000.)/((end.tv_sec+end.tv_usec/1000000.)- (start.tv_sec + start.tv_usec/1000000.)));
 	printf("File MD5sum: ");
 	int j;

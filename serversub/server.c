@@ -1,6 +1,7 @@
 //Andrew Gnott (agnott)
 //Brittany Harrington (bharrin4)
 //Nicholas Swift (nswift)
+// TCP Server waits for connection from client, transfers file upon request.
 
 #include<stdio.h>	 
 #include<stdlib.h>	  
@@ -23,6 +24,7 @@ struct recvInfo{
 };
 
 int main(int argc, char*argv[]){	
+	// Allocates appropriate memory.
 	struct sockaddr_in sin;	
 	struct recvInfo info;
 	char buf[MAX_LINE];	
@@ -35,7 +37,7 @@ int main(int argc, char*argv[]){
 	if (argc!=2)	{
 		fprintf(stderr, "error: incorrect number of arguments\n");
 	}	else	{
-		//set first argument to port number
+		//set port number to first argument.
 		portNum=atoi(argv[1]);
 	}
 
@@ -67,26 +69,21 @@ int main(int argc, char*argv[]){
 		exit(1);	
 	}	
 
-//	printf("Welcome to the first TCP Server!\n");	
-
 	/*wait for connection, then receive and print text*/	
 	while(1){
 		if((new_s = accept(s, (struct sockaddr*)&sin, (socklen_t *)&len)) < 0){	
 			perror("simplex-­‐talk:	accept");	
 			exit(1);
 		}
-//		else printf("New connection.\n");
 
 		//Receiving size of file name
 		if((len = recv(new_s, buf, sizeof(buf),0)) == -1){
 			perror("Server Received Error!");
 			exit(1);
 		}
-//		else printf("New message: %s\n", buf);
 
 		//store filename length into struct and clear receiving buffer when done
 		info.filename_len = htons((short) atoi(buf));
-//		printf("Size: %s \n", buf);
 		memset(buf,0,strlen(buf));
 
 		//Receiving file name
@@ -94,16 +91,9 @@ int main(int argc, char*argv[]){
 			perror("Server Received Error!");
 			exit(1);
 		}
-//		else printf("New message: %s\n", buf);
 
-//		printf("length: %d\n", info.filename_len);
-		/*	if(info.filename_len != strlen(buf)){
-			printf("Error receiving filename");
-			exit(1);
-			}*/
 		//copy contents of buffer into filename and clear buffer once more
 		strcpy(info.filename, buf);
-//		printf("Filename: %s \n", buf);
 		memset(buf,0,strlen(buf));
 
 		//initialize file pointer to open file 
@@ -125,7 +115,6 @@ int main(int argc, char*argv[]){
 				perror("Error sending server's error message\n");
 				exit(1);
 			}
-			//exit(1);
 			continue;
 		}
 
@@ -136,12 +125,10 @@ int main(int argc, char*argv[]){
 			printf("Error opening file.\n");
 			exit(1);
 		}
-//		else printf("File successfully opened.\n");
 
 		/*send filesize back to client. */
 		fseek(fp, 0L, SEEK_END);
 		file_size = ftell(fp);
-//		printf("File size: %d\n", file_size);
 		if(send(new_s, &file_size, sizeof(file_size), 0) == -1)	{
 			perror("server send error!");
 			exit(1);
@@ -158,11 +145,7 @@ int main(int argc, char*argv[]){
 		while ((bytes = fread (data, 1, 1024, fp)) != 0)
 			MD5_Update (&mdContext, data, bytes);
 		MD5_Final (c,&mdContext);
-/*		printf("MD5: ");
-		int i;
-		for(i = 0; i < MD5_DIGEST_LENGTH; i++) printf("%02x", c[i]);
-		printf ("\n");
-*/
+
 		/* Send MD5 hash value of the file back to the client. */
 		if (send(new_s, c, sizeof(c), 0) == -1)	{
 			perror("Hash not sent successfully...\n");
@@ -186,12 +169,10 @@ int main(int argc, char*argv[]){
 		}
 
 
-		/* Close file */
-//		printf("Closing file.\n");	
+		/* Close file */	
 		fclose(fp);
 
 		/* Cleanup */
-//		printf("Server finishes, close the connection!\n");
 		bzero(fileData, MAX_FILE_SIZE);
 		close(new_s);
 	}
