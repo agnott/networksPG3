@@ -8,4 +8,4 @@ client: $(FNAME).c
 	$(CMP) $(FLAGS) $(FNAME).c -o $(FNAME)
 
 clean:
-	rm -f $(FNAME)
+	rm -f $(FNAME) SmallFile.txt MediumFile.pdf LargeFile.mp4
