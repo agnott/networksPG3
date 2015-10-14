@@ -121,8 +121,6 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-
-
 	//create file to store contents of file being receivd
 	FILE *file;
 	file=fopen(argv[3], "w+");	//create file with write permissions
@@ -192,7 +190,15 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	//print out RTT time
-	printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
+	//Say that hash matches, print out information
+	printf("Hash Matches\n");
+	printf("%i bytes transferred in %5.2f seconds\n", file_size, ((end.tv_sec + end.tv_usec/1000000.)- (start.tv_sec + start.tv_usec/1000000.)));
+	//printf("RTT: %ld microseconds \n", ((end.tv_sec*1000000+end.tv_usec)- (start.tv_sec * 1000000 + start.tv_usec)));
+	printf("Throughput: %5.3f Megabytes/sec\n", (file_size/1000000.)/((end.tv_sec+end.tv_usec/1000000.)- (start.tv_sec + start.tv_usec/1000000.)));
+	printf("File MD5sum: ");
+	int j;
+	for(j = 0; j < MD5_DIGEST_LENGTH; j++) printf("%02x", c[j]);
+	printf ("\n");
+
 	return 0;
 }
