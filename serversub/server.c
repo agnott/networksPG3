@@ -115,7 +115,7 @@ int main(int argc, char*argv[]){
 				perror("Error sending server's error message\n");
 				exit(1);
 			}
-			continue;
+			exit(1);
 		}
 
 
